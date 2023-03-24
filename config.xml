@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Robot Type="Robot" Name="Reliance">
+    <Effems>
+    <Effem Name="VacuumGrip" ToggleVacuum="True" TogglePlunger="False" MoveForward="False" />
+    <Effem Name="ActiveEdgeGrip" ToggleVacuum="False" TogglePlunger="True" MoveForward="True" />
+    <Effem Name="PassiveEdgeGrip" ToggleVacuum="False" TogglePlunger="False" MoveForward="False" />
+    </Effems>
+
+    <Ports>
+    <Port ID="A"  Name="LoadPortA" LocationMin="-158" LocationMax="-138" Units="mm" />
+    <Port ID="B" Name="LoadPortB" LocationMin="347" LocationMax="367" Units="mm" />
+    <Port ID="C" Name="LoadPortC" LocationMin="852" LocationMax="872" Units="mm" />
+    <Port ID="D" Name="LoadPortD" LocationMin="1357" LocationMax="1377" Units="mm" />
+    </Ports>
+
+    <OtherDimensions>
+        <OtherDimension Type="Z-axis" Name="Z1" LocationMin="145" LocationMax="165" Units="mm"/>
+        <OtherDimension Type="Z-axis" Name="Z2" LocationMin="135" LocationMax="155" Units="mm"/>
+        <OtherDimension Type="Theta" Name="Theta" LocationMin="-93" LocationMax="-87" Units="radians"/>
+        <OtherDimension Type="EEGet" Name="EEGet" LocationMin="390" LocationMax="446" Units="mm"/>
+        <OtherDimension Type="EEPut" Name="EEPut" LocationMin="390" LocationMax="444" Units="mm"/>
+    </OtherDimensions>
+
+    <TeachParameters>
+        <TeachParameter SlotNumber="12" FineStepSize=".01" RoughStepSize=".1" />
+    </TeachParameters>
+</Robot>
+
