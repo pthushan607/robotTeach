@@ -1,28 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Robot Type="Robot" Name="Reliance">
     <Effems>
-    <Effem Name="VacuumGrip" ToggleVacuum="True" TogglePlunger="False" MoveForward="False" />
-    <Effem Name="ActiveEdgeGrip" ToggleVacuum="False" TogglePlunger="True" MoveForward="True" />
-    <Effem Name="PassiveEdgeGrip" ToggleVacuum="False" TogglePlunger="False" MoveForward="False" />
+    <AEG Name="ActiveEdgeGrip" ToggleVacuum="True" TogglePlunger="False" MoveForward="False" />
+    <VBGFork Name="FIX" ToggleVacuum="False" TogglePlunger="True" MoveForward="True" />
+    <VBGPaddle Name="FIX" ToggleVacuum="False" TogglePlunger="False" MoveForward="False" />
+    <PCB Name="FIX" ToggleVacuum="False" TogglePlunger="False" MoveForward="False" />
+    <PEC Name="Fix" ToggleVacuum="False" TogglePlunger="False" MoveForward="False" />
     </Effems>
 
     <Ports>
-    <Port ID="A"  Name="LoadPortA" LocationMin="-158" LocationMax="-138" Units="mm" />
-    <Port ID="B" Name="LoadPortB" LocationMin="347" LocationMax="367" Units="mm" />
-    <Port ID="C" Name="LoadPortC" LocationMin="852" LocationMax="872" Units="mm" />
-    <Port ID="D" Name="LoadPortD" LocationMin="1357" LocationMax="1377" Units="mm" />
+        <LoadPortA ID="A" Name="LoadPortA" LocationMin="-158" LocationMax="-138" />
+        <LoadPortB ID="B" Name="LoadPortB" LocationMin="347" LocationMax="367" />
+        <LoadPortC ID="C" Name="LoadPortC" LocationMin="852" LocationMax="872" />
+        <LoadPortD ID="D" Name="LoadPortD" LocationMin="1357" LocationMax="1377" />
     </Ports>
-
+    <Zs>
+        <Z1 Name="Z1" LocationMin="145" LocationMax="165" />
+        <Z2 Name="Z2" LocationMin="135" LocationMax="155" />
+    </Zs>
     <OtherDimensions>
-        <OtherDimension Type="Z-axis" Name="Z1" LocationMin="145" LocationMax="165" Units="mm"/>
-        <OtherDimension Type="Z-axis" Name="Z2" LocationMin="135" LocationMax="155" Units="mm"/>
-        <OtherDimension Type="Theta" Name="Theta" LocationMin="-93" LocationMax="-87" Units="radians"/>
-        <OtherDimension Type="EEGet" Name="EEGet" LocationMin="390" LocationMax="446" Units="mm"/>
-        <OtherDimension Type="EEPut" Name="EEPut" LocationMin="390" LocationMax="444" Units="mm"/>
+        <OtherDimension Name="Theta" RotationMin="-93" RotationMax="-87" />
+        <OtherDimension Name="EEGet" GetLocationMin="390" GetLocationMax="446" />
+        <OtherDimension Name="EEPut" PutLocationMin="390" PutLocationMax="444" />
+        <OtherDimension SlotNumber="12" FineStepSize=".01" RoughStepSize=".1"  />
     </OtherDimensions>
 
-    <TeachParameters>
-        <TeachParameter SlotNumber="12" FineStepSize=".01" RoughStepSize=".1" />
-    </TeachParameters>
 </Robot>
 
