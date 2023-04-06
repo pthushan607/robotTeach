@@ -1,4 +1,5 @@
 
+
 #variables for current tool specifications
 global currentLoadPort
 global effemType
@@ -9,15 +10,18 @@ global loadPortMin
 global loadPortMax
 global currentZMax
 global currentZMin
-global thetaMin
-global thetaMax
+global MaxT
+global MinT
 global eeGetMax
 global eeGetMin
-global eePutMax
-global eePutMin
+global MinEEPut
+global MaxEEPut
 global fineStepSize
 global roughStepSize
-
+global slotNumber
+global loadPortID
+global MinZ
+global MaxZ
 
 def guisetup():
     import PySimpleGUI as sg
@@ -63,7 +67,6 @@ def guisetup():
                 window.close()
                 for x in values:
                     guiValues.append(values[x])
-
     window.close()
 
 
@@ -80,43 +83,57 @@ def getconfigvalues():
     #[robot type, ee width, station, traverser, ee type, which z, is aligner installed, alinger left or right, ccd front or back, alinger station]
     userInput = guisetup()
     currentLoadPort = userInput[2]
-    currentEEType = userInput[4]
+    effemType = userInput[4]
     currentZ = userInput[5]
 
     ## returns current loadport with the location min and max
     if currentLoadPort:
         for tag in root.findall("Ports/" + str(currentLoadPort)):
+            loadPortID = tag.get('ID')
             loadPortLocationMin = int(tag.get('LocationMin'))
             loadPortLocationMax = int(tag.get('LocationMax'))
-            print(loadPortLocationMin, loadPortLocationMax)
-
+    print(loadPortID)
     # returns effems types with associated boolean values
-    if currentEEType:
-        for tag in root.findall("Effems/" + str(currentEEType)):
+    if effemType:
+        for tag in root.findall("Effems/" + str(effemType)):
             toggleVacuum = (tag.get('ToggleVacuum'))
             togglePlunger = (tag.get('TogglePlunger'))
             moveForward = (tag.get('MoveForward'))
-            print(toggleVacuum, togglePlunger, moveForward)
 
     if currentZ:
         for tag in root.findall("Zs/"+str(currentZ)):
-            currentZMin = int(tag.get('LocationMin'))
-            currentZMax = int(tag.get('LocationMax'))
+            MinZ = int(tag.get('LocationMin'))
+            MaxZ = int(tag.get('LocationMax'))
 
     # gets the other dimensions from config
-    for tag in root.findall('OtherDimension'):
-        thetaMin = tag.get('RotationMin')
-        thetaMax = tag.get('RotationMax')
-        eeGetMax = tag.get('GetLocationMax')
-        eeGetMin = tag.get('GetLocationMin')
-        eePutMax = tag.get('PutLocationMax')
-        eePutMin = tag.get('PutLocationMin')
-        fineStepSize = tag.get('FineStepSize')
-        roughStepSize = tag.get('RoughStepSize')
-        print(thetaMin)
-getconfigvalues()
+    i = 0
+    for tag in root.findall('OtherDimensions/OtherDimension'):
+            MinT = int(tag.get('RotationMin'))
+            MaxT = int(tag.get('RotationMax'))
+            eeGetMax = int(tag.get('GetLocationMax'))
+            MinEEPut = int(tag.get('GetLocationMin'))
+            MaxEEPut = int(tag.get('PutLocationMax'))
+            eePutMin = int(tag.get('PutLocationMin'))
+            fineStepSize = tag.get('FineStepSize')
+            roughStepSize = tag.get('RoughStepSize')
+            slotNumber = int(tag.get('SlotNumber'))
 
-
-
-
+def MvToReadyPut():
+    teachslot = slotNumber
+    EE = effemType  # Gets EE selected from GUI input
+    teachstn = currentLoadPort  # Gets teach station from GUI input
+    # Format teach station and teach slot into proper format for API
+    stn = [teachstn, teachslot]
+    dot = "."
+    stn = dot.join(stn)
+    ef.SetActiveRobotMotionProfile("Low")
+    message = "Robot moving to station"
+    self.panelDisplay.Label = message
+    ef.MoveToReadyPut(EE, stn)
+    ZMove = 160
+    if EE == "EE2":  # move forward to mnmake sure tips clear substrate during z up
+        ZMove = 150
+    ef.MoveAbsolute("Z", NumberWithUnit(ZMove, "mm"))
+    message = "Robot at station \n\r Verify robot is at proper station and is clear to extend \n\r Then press ExtendToStation @ Slot12 button"
+    self.panelDisplay.Label = message
 
