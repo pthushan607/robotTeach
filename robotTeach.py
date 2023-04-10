@@ -8,14 +8,15 @@ global togglePlunger
 global moveForward
 global loadPortMin
 global loadPortMax
+global currentZ
 global currentZMax
 global currentZMin
-global MaxT
-global MinT
+global maxT
+global minT
 global eeGetMax
 global eeGetMin
-global MinEEPut
-global MaxEEPut
+global eePutMin
+global eePutMax
 global fineStepSize
 global roughStepSize
 global slotNumber
@@ -92,7 +93,7 @@ def getconfigvalues():
             loadPortID = tag.get('ID')
             loadPortLocationMin = int(tag.get('LocationMin'))
             loadPortLocationMax = int(tag.get('LocationMax'))
-    print(loadPortID)
+
     # returns effems types with associated boolean values
     if effemType:
         for tag in root.findall("Effems/" + str(effemType)):
@@ -111,29 +112,11 @@ def getconfigvalues():
             MinT = int(tag.get('RotationMin'))
             MaxT = int(tag.get('RotationMax'))
             eeGetMax = int(tag.get('GetLocationMax'))
-            MinEEPut = int(tag.get('GetLocationMin'))
-            MaxEEPut = int(tag.get('PutLocationMax'))
+            eePutMin = int(tag.get('GetLocationMin'))
+            eePutMax = int(tag.get('PutLocationMax'))
             eePutMin = int(tag.get('PutLocationMin'))
             fineStepSize = tag.get('FineStepSize')
             roughStepSize = tag.get('RoughStepSize')
             slotNumber = int(tag.get('SlotNumber'))
 
-def MvToReadyPut():
-    teachslot = slotNumber
-    EE = effemType  # Gets EE selected from GUI input
-    teachstn = currentLoadPort  # Gets teach station from GUI input
-    # Format teach station and teach slot into proper format for API
-    stn = [teachstn, teachslot]
-    dot = "."
-    stn = dot.join(stn)
-    ef.SetActiveRobotMotionProfile("Low")
-    message = "Robot moving to station"
-    self.panelDisplay.Label = message
-    ef.MoveToReadyPut(EE, stn)
-    ZMove = 160
-    if EE == "EE2":  # move forward to mnmake sure tips clear substrate during z up
-        ZMove = 150
-    ef.MoveAbsolute("Z", NumberWithUnit(ZMove, "mm"))
-    message = "Robot at station \n\r Verify robot is at proper station and is clear to extend \n\r Then press ExtendToStation @ Slot12 button"
-    self.panelDisplay.Label = message
 

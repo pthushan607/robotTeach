@@ -6,44 +6,49 @@ teaching of the robot will basically work like this:
 
 """
 from robotTeach import *
+import RPi.GPIO as GPIO
+import time
 
 #moves to the slot number 13 which is from the config file
 def AutoTeachZ():
-    io.DioWriteBit(0, 0, 0)  # make sure output is low to enable sensor
-    teachslot = "Slot12"  # define teach slot
-    slotNo = 12
-    fstep = .01  # fine step size for teach motion
-    qstep = .1  # rough step size for teach motion
+
+    GPIO.setmode(GPIO.BOARD)
+    # for high
+    GPIO.setup(5, GPIO.OUT)
+    # for good
+    GPIO.setup(6, GPIO.OUT)
+    # for low
+    GPIO.setup(13, GPIO.OUT)
+    # runs the GUI and sets all of the default values
+    getconfigvalues()
+
+    #io.DioWriteBit(0, 0, 0)  # make sure output is low to enable sensor
+    #use three GIPO for LEDs
+
+    teachslot = "Slot"+slotNumber  # define teach slot
+    slotNo = slotNumber
+    fstep = fineStepSize  # fine step size for teach motion
+    qstep = roughStepSize  # rough step size for teach motion
     # Define nominal teach paramters for ASML JCP
     TopDive = 3
     BottomDive = -2
     PlusZOff = 3
     MinusZOff = 3.15
-    MaxXA = 872
-    MinXA = 852
-    MaxXB = 367
-    MinXB = 347
-    MaxXC = -138
-    MinXC = -158
-    MaxZ1 = 165
-    MinZ1 = 145
-    MaxZ2 = 155
-    MinZ2 = 135
-    MaxT = -87
-    MinT = -93
-    MaxEEGet = 466
-    MinEEGet = 456
-    MaxEEPut = 464
-    MinEEPut = 454
+    currentMinX = loadPortMin
+    currentMaxX = loadPortMax
+    currentMaxZ = MaxZaxZ
+    currentMinZ = MinZinZ
+    MaxT = maxT
+    MinT = minT
+    MaxEEGet = eeGetMax
+    MinEEGet = eeGetMin
+    MaxEEPut = eePutMax
+    MinEEPut = eePutMin
     GetOffset = 2
     # Define available stations for teaching
-    stnA = "PortA"
-    stnB = "PortB"
-    stnC = "PortC"
-    stnD = "PortD"
     EEType = "AEG"  # sets EE type to perfrom 2mm R offset for AEG during pick
-    EE = self.chooseEE.Value  # Gets EE selected from GUI input
-    teachstn = self.chooseStn.Value  # Gets teach station from GUI input
+    EE = effemType  # Gets EE selected from GUI input
+    teachstn = currentLoadPort  # Gets teach station from GUI input
     # Format teach station and teach slot into proper format for API
     stn = [teachstn, teachslot]
     dot = "."
@@ -70,30 +75,17 @@ def AutoTeachZ():
     try:
         if PosTheta3 < MinT or PosTheta3 > MaxT:
             message = "Theta out of auto-teach range\n\rexiting auto-teach"
-            self.panelDisplay.Label = message
             raise Exception(message)
-        elif stnA == teachstn:
-            if PosX3 < MinXA or PosX3 > MaxXA:
+        elif teachstn:
+            if PosX3 < currentMinX or PosX3 > currentMaxX:
                 message = "X out of auto-teach range\n\rexiting auto-teach"
-                self.panelDisplay.Label = message
-                raise Exception(message)
-        elif stnB == teachstn:
-            if PosX3 < MinXB or PosX3 > MaxXB:
-                message = "X out of auto-teach range\n\rexiting auto-teach"
-                self.panelDisplay.Label = message
-                raise Exception(message)
-        elif stnC == teachstn:
-            if PosX3 < MinXC or PosX3 > MaxXC:
-                message = "X out of auto-teach range\n\rexiting auto-teach"
-                self.panelDisplay.Label = message
                 raise Exception(message)
     except:  # Halt auto teach and display message
-        self.panelDisplay.Label = message
         raise
 
     ef.SetActiveRobotMotionProfile("Low")
     message = "Z Teach Beginning\n\rPlease wait about 1 minute"
-    self.panelDisplay.Label = message
+    print(message)
     #
     # Check if EE position is in safe nominal range for teaching
     #
@@ -104,12 +96,12 @@ def AutoTeachZ():
     try:
         if PosEE3 < MinEEPut or PosEE3 > MaxEEPut:
             message = "EE Put out of auto-teach range\n\rexiting auto-teach"
-            self.panelDisplay.Label = message
             ef.RetractEndEffecter(EE)
             raise Exception(message)
     except:
         # Exit teach and display message if EE is out of range
         self.panelDisplay.Label = message
+        print(message)
 
     #
     #
@@ -145,20 +137,20 @@ def AutoTeachZ():
     try:
         if WafPres == 1:
             message = "wafer detected on EE while Z down\n\r stopping teach"
-            self.panelDisplay.Label = message
+            print(message)
             raise Exception(message)
     except:
         # Exit teach and display message if EE is out of range
-        self.panelDisplay.Label = message
+        print(message)
         raise
     try:
         if WafPres == -2:
             message = "Unknown wafer state on EE\n\r stopping teach"
-            self.panelDisplay.Label = message
+            print(message)
             raise Exception(message)
     except:
         # Exit teach and display message if EE is out of range
-        self.panelDisplay.Label = message
+        print(message)
         raise
 
     # toggle output bit on and off to set sensor zero with wafer on shelf
@@ -166,12 +158,10 @@ def AutoTeachZ():
     time.sleep(1)
     io.DioWriteBit(0, 0, 0)
     time.sleep(2)
-    if EEType == "AEG":  # move forward to mnmake sure tips clear substrate during z up
+    if EE == "AEG":  # move forward to mnmake sure tips clear substrate during z up
         ef.MoveRelative(EE, NumberWithUnit(2, "mm"))
     ZMove = 152
-    if EE == "EE2":  #
-        ZMove = 142
-    ef.MoveAbsolute("Z", NumberWithUnit(ZMove, "mm"))
+
     # ef.MoveRelative("Z",NumberWithUnit(12,"mm"))	# jump up 12mm to save time
     #
     # Verify wafer is gripped again
@@ -181,34 +171,38 @@ def AutoTeachZ():
     try:
         if WafPres == 0:
             message = "Wafer not detected after Z up\n\r stopping teach"
-            self.panelDisplay.Label = message
+            print(message)
             raise Exception(message)
     except:
         # Exit teach and display message if EE is out of range
-        self.panelDisplay.Label = message
+        print(message)
         raise
     try:
         if WafPres == -2:
             message = "Unknown wafer state on EE after Z up\n\r stopping teach"
-            self.panelDisplay.Label = message
+            print(message)
             raise Exception(message)
     except:
         # Exit teach and display message if EE is out of range
-        self.panelDisplay.Label = message
+        print(message)
         raise
 
     # move up to high transition on and then down to off and apply wafer restraint
     while 20:
         Rh = io.DioReadBit(1, 2)
         if Rh == 0:
+            GIPO.output(13, True)
             break
         ef.MoveRelative("Z", NumberWithUnit(qstep, "mm"))
+        GIPO.output(13, False)
     time.sleep(2)
     while 21:
         Rh = io.DioReadBit(1, 2)
         if Rh == 1:
+            GIPO.output(5, True)
             break
         ef.MoveRelative("Z", NumberWithUnit(-fstep, "mm"))
+        GIPO.output(5, False)
     time.sleep(2)  # settle and then grip the wafer
     ef.ApplyWaferRestraint(EE)
     if EEType == "AEG":  # move back to the actual wafer position at station
@@ -218,22 +212,29 @@ def AutoTeachZ():
     while 8:
         Rh = io.DioReadBit(1, 2)
         if Rh == 0:
+            GIPO.output(13, True)
             break
         ef.MoveRelative("Z", NumberWithUnit(fstep, "mm"))
+        GIPO.output(13, False)
     time.sleep(2)
     while 9:
         Rh = io.DioReadBit(1, 2)
         if Rh == 1:
+            GIPO.output(5, True)
             break
         ef.MoveRelative("Z", NumberWithUnit(-fstep, "mm"))
+        GIPO.output(5, False)
     PosZh = ef.GetAxisPosition("Z")  # read transition point and record as high point
     time.sleep(2)
     # move down in fine step until low transition point found
     while 10:
         Rh = io.DioReadBit(1, 1)
         if Rh == 0:
+            GIPO.output(5, True)
             break
         ef.MoveRelative("Z", NumberWithUnit(-fstep, "mm"))
+        GIPO.output(6, True)
+
     PosZl = ef.GetAxisPosition("Z")
     # convert axis positions for math
     PosZh1 = NumberWithUnit.ToString(PosZh)
@@ -260,21 +261,14 @@ def AutoTeachZ():
     # Chek for which EE is selected and then verify Z is in nomnal range
     #
     try:
-        if EE == "EE1":
-            if PosZn3 < MinZ1 or PosZn3 > MaxZ1:
+        if currentZ:
+            if PosZn3 < currentMinZ or PosZn3 > currentMinZ:
                 message = "Z out of auto-teach range\n\r exiting auto-teach"
-                self.panelDisplay.Label = message
-                raise Exception(message)
-        elif EE == "EE2":
-            message = "check if EE2"
-            self.panelDisplay.Label = message
-            if PosZn3 < MinZ2 or PosZn3 > MaxZ2:
-                message = "Z out of auto-teach range\n\r exiting auto-teach"
-                self.panelDisplay.Label = message
+                print(message)
                 raise Exception(message)
     except:
         # Halt auto teach and display message
-        self.panelDisplay.Label = message
+        print(message)
         raise
     #
     axis = "BaseZ"
@@ -310,4 +304,4 @@ def AutoTeachZ():
             we.SetStationData(cal, EE, stationName, changed)
             efsv.SaveStationDataToDisk(cal)
     message = "Teach Completed\n\r New Z position is: " + str(NewZ) + "\n\r Z position was: " + str(nb)
-    self.panelDisplay.Label = message
+    print(message)
